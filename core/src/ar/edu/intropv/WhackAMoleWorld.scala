@@ -1,13 +1,16 @@
 package ar.edu.intropv
 
-import com.badlogic.gdx.graphics.Color
+import ar.com.pablitar.libgdx.commons.ColorUtils
+import ar.com.pablitar.libgdx.commons.extensions.VectorExtensions._
 import com.badlogic.gdx.math.{Circle, MathUtils, Vector2}
 
-class WhackAMoleWorld {
+class WhackAMoleWorld(val player: Player) {
   var moles = Set.empty[Mole]
 
   val width = 1280
   val height = 720
+
+  val center: Vector2 = (width / 2, height / 2)
 
   def addMole(mole: Mole): Unit = moles = moles + mole
 
@@ -26,7 +29,7 @@ class WhackAMoleWorld {
 }
 
 class MoleSpawner(world: WhackAMoleWorld) {
-  val SPAWN_TIME = 3f
+  val SPAWN_TIME = 0.3f
 
   var timeToNextSpawn = SPAWN_TIME
 
@@ -42,13 +45,26 @@ class MoleSpawner(world: WhackAMoleWorld) {
   }
 }
 
-class Mole(val position: Vector2, world: WhackAMoleWorld) {
+class Mole(var position: Vector2, world: WhackAMoleWorld) {
 
-  val color = Color.GREEN
+  world.center
 
-  val MAX_LIFE = 2f
+  val speed = 640f
 
-  val shape = new Circle(position, 40)
+  var velocity = (world.center - position).nor() * speed + (0, 300)
+
+  def dragMagnitude = 700f
+
+  def drag = velocity.cpy().scl(-1).nor() * dragMagnitude
+
+  def acceleration: Vector2 = new Vector2(0, -640f)
+    //(world.player.currentPointerPosition - position).nor() * accelerationMagnitude
+
+  val color = ColorUtils.fromHSV(MathUtils.random(360) , 80, 60)
+
+  val MAX_LIFE = 30f
+
+  def shape = new Circle(position, 40)
 
   var life = MAX_LIFE
 
@@ -56,6 +72,15 @@ class Mole(val position: Vector2, world: WhackAMoleWorld) {
   def update(delta: Float) = {
     life -= delta
     if (life <= 0) remove()
+    velocity += acceleration * delta
+
+    if(velocity.len() < (drag * delta).len()) {
+      velocity = (0, 0)
+    } else {
+      velocity += drag * delta
+    }
+
+    position += velocity * delta
   }
 
   def remove() = {

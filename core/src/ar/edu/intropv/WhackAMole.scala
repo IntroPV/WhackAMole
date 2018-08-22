@@ -6,8 +6,8 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.{ApplicationAdapter, Gdx, InputAdapter}
 
 class WhackAMole extends ApplicationAdapter {
-  val world = new WhackAMoleWorld
-  val player = new Player()
+  val player = new Player(() => toWorld(new Vector2(Gdx.input.getX, Gdx.input.getY())))
+  val world = new WhackAMoleWorld(player)
 
   lazy val renderers = new Renderers()
   lazy val scoreRenderer = new ScoreRenderer(new BitmapFont())
